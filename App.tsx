@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar.tsx';
 import Hero from './components/Hero.tsx';
 import About from './components/About.tsx';
-import Services from './components/Services.tsx';
-import AISection from './components/AISection.tsx';
 import UploadSection from './components/UploadSection.tsx';
 import Portfolio from './components/Portfolio.tsx';
 import Contact from './components/Contact.tsx';
@@ -17,32 +15,26 @@ const App: React.FC = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [userProjects, setUserProjects] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'done'>('idle');
 
   useEffect(() => {
     const loadSavedData = async () => {
       try {
+        setSyncStatus('syncing');
         const savedProjects = await getAllProjects();
         if (savedProjects && savedProjects.length > 0) {
-          const rehydratedProjects = savedProjects.map(proj => {
-            if (proj.fileData && proj.fileData instanceof Blob) {
-              try {
-                const newUrl = URL.createObjectURL(proj.fileData);
-                return {
-                  ...proj,
-                  contentSrc: newUrl,
-                  image: proj.type === 'photo' ? newUrl : proj.image
-                };
-              } catch (e) {
-                console.warn("Blob URL creation failed for project:", proj.id);
-                return proj;
-              }
+          const rehydrated = savedProjects.map(proj => {
+            if (proj.fileData instanceof Blob) {
+              const url = URL.createObjectURL(proj.fileData);
+              return { ...proj, contentSrc: url, image: proj.type === 'photo' ? url : proj.image };
             }
             return proj;
           });
-          setUserProjects(rehydratedProjects.sort((a, b) => b.timestamp - a.timestamp));
+          setUserProjects(rehydrated.sort((a, b) => b.timestamp - a.timestamp));
         }
+        setTimeout(() => setSyncStatus('done'), 1000);
       } catch (error) {
-        console.error("Failed to restore gallery from IndexedDB:", error);
+        console.error("Storage load error:", error);
       } finally {
         setIsLoading(false);
       }
@@ -52,63 +44,65 @@ const App: React.FC = () => {
 
   const handleAddToGallery = async (item: GalleryItem) => {
     setUserProjects(prev => [item, ...prev]);
+    setSyncStatus('syncing');
     try {
       await saveProject(item);
-    } catch (error) {
-      console.error("Storage error:", error);
-      alert("브라우저 저장소 용량이 부족하거나 설정에 의해 차단되었습니다.");
+      setTimeout(() => setSyncStatus('done'), 800);
+    } catch (e) {
+      console.error(e);
+      setSyncStatus('idle');
     }
-    const portfolioSection = document.getElementById('portfolio');
-    if (portfolioSection) {
-      portfolioSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById('portfolio')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleDeleteProject = async (id: string) => {
-    if (!window.confirm("이 프로젝트를 아카이브에서 영구적으로 삭제하시겠습니까?")) return;
-
+  const handleDelete = async (id: string) => {
+    if (!confirm("이 자산을 보관소에서 영구 삭제하시겠습니까?")) return;
     try {
       await deleteProject(id);
-      const projectToDelete = userProjects.find(p => p.id === id);
-      if (projectToDelete?.contentSrc?.startsWith('blob:')) {
-        URL.revokeObjectURL(projectToDelete.contentSrc);
-      }
       setUserProjects(prev => prev.filter(p => p.id !== id));
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("삭제 중 오류가 발생했습니다.");
+    } catch (e) {
+      console.error(e);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar onUploadClick={() => setIsUploadModalOpen(true)} />
+      
+      {/* 동기화 상태 바 */}
+      <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[110] transition-all duration-500 ${syncStatus === 'syncing' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+        <div className="bg-gray-900 text-white px-6 py-2 rounded-full text-[10px] font-black tracking-widest flex items-center gap-3 shadow-2xl">
+          <div className="w-2 h-2 bg-yeonji rounded-full animate-ping" />
+          SYNCING WITH CLOUD ARCHIVE...
+        </div>
+      </div>
+
       <main className="flex-grow">
-        <section id="home"><Hero /></section>
-        <section id="about"><About /></section>
-        <section id="services"><Services /></section>
-        <section id="ai-story"><AISection /></section>
-        <section id="upload-section"><UploadSection onPublish={handleAddToGallery} /></section>
-        <section id="portfolio">
+        <Hero />
+        <About />
+        {/* '제공 서비스' 및 'AI 브랜드 스토리 엔진' 섹션이 제거되었습니다 */}
+        <UploadSection onPublish={handleAddToGallery} />
+        
+        <section id="portfolio" className="relative">
           {isLoading ? (
-            <div className="py-32 text-center bg-white flex flex-col items-center">
-              <div className="w-12 h-12 border-4 border-yeonji border-t-transparent rounded-full animate-spin mb-6"></div>
-              <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px]">Restoring Archive...</p>
+            <div className="py-40 text-center flex flex-col items-center">
+              <div className="w-10 h-10 border-4 border-yeonji border-t-transparent rounded-full animate-spin mb-4" />
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Accessing Secure Vault</p>
             </div>
           ) : (
-            <Portfolio 
-              userProjects={userProjects} 
-              onDelete={handleDeleteProject}
-            />
+            <Portfolio userProjects={userProjects} onDelete={handleDelete} />
           )}
         </section>
-        <section id="contact"><Contact /></section>
+        
+        <Contact />
       </main>
+      
       <Footer />
+      
       <PortfolioUploadModal 
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
-        onUploadSuccess={(item) => handleAddToGallery(item as any)}
+        onUploadSuccess={handleAddToGallery} 
       />
     </div>
   );
