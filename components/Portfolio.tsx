@@ -41,23 +41,23 @@ const Portfolio: React.FC<PortfolioProps> = ({ userProjects = [], onDelete }) =>
   const allProjects = [...userProjects, ...initialProjects];
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // 모달 열림 방지
+    e.stopPropagation();
     if (onDelete) onDelete(id);
   };
 
   return (
-    <section id="portfolio" className="py-32 bg-white">
+    <section id="portfolio" className="py-24 md:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-32 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 md:mb-32 gap-8">
           <div className="max-w-xl">
-            <span className="text-yeonji font-black tracking-[0.4em] uppercase text-[10px] mb-6 block">Archive System</span>
-            <h2 className="text-6xl md:text-[8rem] font-black leading-[0.8] tracking-tighter text-gray-900">
+            <span className="text-yeonji font-black tracking-[0.4em] uppercase text-[9px] md:text-[10px] mb-4 md:mb-6 block">Archive System</span>
+            <h2 className="text-5xl md:text-[8rem] font-black leading-[0.8] tracking-tighter text-gray-900">
               WORK<br />LIST.
             </h2>
           </div>
-          <div className="text-right flex flex-col items-end">
-             <p className="text-gray-400 text-[10px] font-black tracking-widest uppercase mb-4">Click text to open viewer</p>
-             <div className="h-0.5 w-40 bg-gray-900" />
+          <div className="flex flex-col items-start md:items-end">
+             <p className="text-gray-400 text-[9px] md:text-[10px] font-black tracking-widest uppercase mb-4">Tap to open project viewer</p>
+             <div className="h-0.5 w-32 md:w-40 bg-gray-900" />
           </div>
         </div>
 
@@ -68,11 +68,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ userProjects = [], onDelete }) =>
               onMouseEnter={() => setHoveredId(project.id)}
               onMouseLeave={() => setHoveredId(null)}
               onClick={() => setSelectedProject(project)}
-              className="group relative border-b border-gray-100 py-12 md:py-20 cursor-pointer overflow-visible transition-all duration-500 hover:bg-gray-50/80"
+              className="group relative border-b border-gray-100 py-10 md:py-20 cursor-pointer overflow-visible transition-all duration-500 hover:bg-gray-50/80"
             >
-              {/* Floating Hover Preview Card */}
+              {/* Floating Hover Preview Card (Only on Desktop) */}
               <div 
-                className={`fixed pointer-events-none transition-all duration-500 z-[100] w-64 md:w-[32rem] aspect-video rounded-[2rem] overflow-hidden shadow-2xl bg-gray-900 ${
+                className={`fixed pointer-events-none transition-all duration-500 z-[100] w-64 md:w-[32rem] aspect-video rounded-[2rem] overflow-hidden shadow-2xl bg-gray-900 hidden md:block ${
                   hoveredId === project.id ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
                 }`}
                 style={{
@@ -94,38 +94,33 @@ const Portfolio: React.FC<PortfolioProps> = ({ userProjects = [], onDelete }) =>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent" />
               </div>
 
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-16">
-                  <span className="text-gray-300 font-black text-xs md:text-sm tracking-widest group-hover:text-yeonji transition-colors">
+              <div className="relative z-10 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 md:gap-16 flex-1 min-w-0">
+                  <span className="text-gray-300 font-black text-xs md:text-sm tracking-widest group-hover:text-yeonji transition-colors shrink-0">
                     {String(index + 1).padStart(2, '0')}
                   </span>
-                  <h3 className="text-4xl md:text-[6.5rem] font-black tracking-tighter text-gray-900 group-hover:italic group-hover:translate-x-4 transition-all duration-700 uppercase">
+                  <h3 className="text-2xl md:text-[6.5rem] font-black tracking-tighter text-gray-900 group-hover:italic group-hover:translate-x-2 md:group-hover:translate-x-4 transition-all duration-700 uppercase truncate">
                     {project.title}
                   </h3>
                 </div>
                 
-                <div className="flex flex-col items-end gap-2 text-right">
-                  <div className="flex items-center gap-3">
-                    {/* 영구 보관소 파일(사용자 업로드)인 경우에만 휴지통 아이콘 표시 */}
+                <div className="flex flex-col items-end gap-1 md:gap-2 text-right shrink-0">
+                  <div className="flex items-center gap-2">
                     {project.timestamp > 0 && (
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={(e) => handleDelete(e, project.id)}
-                          className="bg-red-50 text-red-500 p-3 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100 active:scale-90 transform group-hover:scale-110"
-                          title="이 항목을 영구 삭제"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                        <span className="text-[9px] font-black text-yeonji px-2 py-1 bg-yeonji/5 rounded-md border border-yeonji/20">STORED</span>
-                      </div>
+                      <button 
+                        onClick={(e) => handleDelete(e, project.id)}
+                        className="bg-red-50 text-red-500 p-2 md:p-3 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-sm active:scale-90"
+                      >
+                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     )}
-                    <span className="bg-gray-100 text-gray-400 group-hover:bg-yeonji group-hover:text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all">
+                    <span className="bg-gray-100 text-gray-400 group-hover:bg-yeonji group-hover:text-white px-3 md:px-5 py-1 md:py-2 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest transition-all">
                       {project.type}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.3em] hidden md:block">
+                  <p className="text-gray-400 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em] truncate max-w-[80px] md:max-w-none">
                     {project.category}
                   </p>
                 </div>
@@ -134,9 +129,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ userProjects = [], onDelete }) =>
           ))}
         </div>
         
-        <div className="mt-40 flex flex-col items-center">
-          <div className="w-px h-24 bg-gray-200 mb-8" />
-          <p className="text-gray-300 text-[10px] font-black uppercase tracking-[0.8em]">The End of List</p>
+        <div className="mt-24 md:mt-40 flex flex-col items-center">
+          <div className="w-px h-16 md:h-24 bg-gray-200 mb-6 md:mb-8" />
+          <p className="text-gray-300 text-[8px] md:text-[10px] font-black uppercase tracking-[0.6em] md:tracking-[0.8em]">End of Archive</p>
         </div>
       </div>
 

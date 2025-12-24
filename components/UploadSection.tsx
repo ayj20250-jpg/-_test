@@ -7,10 +7,10 @@ interface UploadSectionProps {
 }
 
 const categories = [
-  { id: 'photo', title: '사진 및 이미지', desc: '4K+, Raw 지원', icon: '📸', color: 'blue' },
-  { id: 'video', title: '동영상 및 모션', desc: '10GB+ 대용량 지원', icon: '🎬', color: 'purple' },
-  { id: 'audio', title: '음악 및 오디오', desc: 'Lossless 사운드', icon: '🎵', color: 'pink' },
-  { id: 'document', title: '문서 및 기획', desc: 'Project Guides', icon: '📑', color: 'orange' }
+  { id: 'photo', title: '사진', desc: '4K+, Raw 지원', icon: '📸', color: 'blue' },
+  { id: 'video', title: '영상', desc: '고화질 MP4/MOV', icon: '🎬', color: 'purple' },
+  { id: 'audio', title: '음악', desc: 'MP3/WAV 사운드', icon: '🎵', color: 'pink' },
+  { id: 'document', title: '문서', desc: 'PDF, 기획서', icon: '📑', color: 'orange' }
 ];
 
 const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
@@ -30,53 +30,55 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
       
       const objectUrl = URL.createObjectURL(file);
       
+      // 실제 파일 로딩 시뮬레이션 (사용자 경험을 위한 짧은 딜레이)
       setTimeout(() => {
-        if (activeTab === 'photo') {
-          setPreview(objectUrl);
-        } else if (activeTab === 'video') {
-          setPreview('https://images.unsplash.com/photo-1536240478700-b8673fa92d96?auto=format&fit=crop&w=400&q=80');
-        } else if (activeTab === 'audio') {
-          setPreview('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=400&q=80');
-        } else {
-          setPreview('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80');
-        }
+        setPreview(objectUrl);
         setUploading(false);
-      }, 800);
+      }, 500);
     }
   };
 
   const handlePublish = () => {
-    if (!activeTab || !fileName || !fileObject) return;
+    if (!activeTab || !fileName || !fileObject) {
+      alert("파일을 먼저 선택해주세요.");
+      return;
+    }
 
     const contentUrl = URL.createObjectURL(fileObject);
 
     const newItem: GalleryItem = {
       id: Math.random().toString(36).substr(2, 9),
-      title: fileName.split('.')[0] || 'Untitled',
-      category: categories.find(c => c.id === activeTab)?.title || 'Etc',
-      image: activeTab === 'photo' ? contentUrl : (preview || ''),
+      title: fileName.split('.')[0] || 'Untitled Project',
+      category: categories.find(c => c.id === activeTab)?.title || '기타',
+      // 사진인 경우 실제 이미지를 썸네일로, 나머지는 대표 아이콘 배경 사용
+      image: activeTab === 'photo' ? contentUrl : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80',
       contentSrc: contentUrl,
-      fileData: fileObject, // IndexedDB 저장을 위한 원본 파일 객체
+      fileData: fileObject,
       type: activeTab as any,
       timestamp: Date.now()
     };
 
     onPublish(newItem);
+    
+    // 상태 초기화
     setActiveTab(null);
     setPreview(null);
     setFileObject(null);
     setFileName('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="py-32 bg-gray-50/50">
+    <div className="py-24 bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-24">
-          <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter">UPLOAD CENTER</h2>
-          <p className="text-gray-400 font-medium tracking-widest uppercase text-xs">Persistent Asset Storage (IndexedDB Enabled)</p>
+        <div className="text-center mb-16 md:mb-24">
+          <h2 className="text-4xl md:text-7xl font-black mb-6 tracking-tighter">UPLOAD CENTER</h2>
+          <p className="text-gray-400 font-medium tracking-widest uppercase text-[10px] md:text-xs">
+            Persistent Asset Storage (IndexedDB Enabled)
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-10 md:mb-12">
           {categories.map((cat) => (
             <button
               key={cat.id}
@@ -84,50 +86,87 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
                 setActiveTab(cat.id);
                 setFileObject(null);
                 setFileName('');
+                setPreview(null);
               }}
-              className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center text-center group ${
-                activeTab === cat.id ? 'border-yeonji bg-white shadow-2xl scale-105' : 'border-transparent bg-white/50 hover:bg-white'
+              className={`p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center text-center group ${
+                activeTab === cat.id ? 'border-yeonji bg-white shadow-xl md:shadow-2xl scale-105' : 'border-transparent bg-white/50 hover:bg-white'
               }`}
             >
-              <span className="text-4xl mb-6 grayscale group-hover:grayscale-0 transition-all">{cat.icon}</span>
-              <h3 className="text-lg font-black mb-2">{cat.title}</h3>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{cat.desc}</p>
+              <span className="text-3xl md:text-4xl mb-4 md:mb-6 group-hover:scale-110 transition-transform">{cat.icon}</span>
+              <h3 className="text-sm md:text-lg font-black mb-1 md:mb-2">{cat.title}</h3>
+              <p className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">{cat.desc}</p>
             </button>
           ))}
         </div>
 
         {activeTab && (
-          <div className="max-w-3xl mx-auto bg-white rounded-[4rem] p-12 shadow-2xl animate-fade-up border border-gray-100">
+          <div className="max-w-3xl mx-auto bg-white rounded-[3rem] md:rounded-[4rem] p-8 md:p-12 shadow-2xl animate-fade-up border border-gray-100">
             {!fileObject && !uploading ? (
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="border-4 border-dashed border-gray-100 rounded-[3rem] p-20 text-center cursor-pointer hover:border-yeonji transition-all"
+                className="border-4 border-dashed border-gray-100 rounded-[2rem] md:rounded-[3rem] p-12 md:p-20 text-center cursor-pointer hover:border-yeonji transition-all bg-gray-50/30"
               >
-                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-3xl">📥</span>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleFileChange}
+                  accept={
+                    activeTab === 'photo' ? 'image/*' : 
+                    activeTab === 'video' ? 'video/*' : 
+                    activeTab === 'audio' ? 'audio/*' : '*'
+                  }
+                />
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <span className="text-2xl md:text-3xl">📥</span>
                 </div>
-                <h4 className="text-2xl font-black mb-2">파일을 선택해주세요</h4>
-                <p className="text-gray-400 text-sm">브라우저를 닫아도 데이터가 유지됩니다.</p>
+                <h4 className="text-xl md:text-2xl font-black mb-2">파일 선택하기</h4>
+                <p className="text-gray-400 text-xs md:text-sm px-4">클릭하여 {categories.find(c => c.id === activeTab)?.title} 파일을 업로드하세요.</p>
               </div>
             ) : uploading ? (
               <div className="py-20 text-center">
-                <div className="w-16 h-16 border-4 border-yeonji border-t-transparent rounded-full animate-spin mx-auto mb-8" />
-                <p className="font-black text-gray-900 uppercase tracking-widest">Indexing Asset...</p>
+                <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-yeonji border-t-transparent rounded-full animate-spin mx-auto mb-8" />
+                <p className="font-black text-gray-900 uppercase tracking-widest text-sm">준비 중...</p>
               </div>
             ) : (
               <div className="space-y-8">
-                <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Ready to Secure</p>
-                  <h5 className="text-2xl font-black truncate">{fileName}</h5>
-                  <p className="text-xs text-gray-400 mt-2">Size: {(fileObject.size / (1024 * 1024)).toFixed(2)} MB</p>
+                <div className="bg-gray-50 p-6 md:p-8 rounded-3xl border border-gray-100">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-yeonji/10 rounded-xl flex items-center justify-center text-xl">
+                      {categories.find(c => c.id === activeTab)?.icon}
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selected Asset</p>
+                      <h5 className="text-lg md:text-xl font-black truncate">{fileName}</h5>
+                    </div>
+                  </div>
+                  
+                  {activeTab === 'photo' && preview && (
+                    <div className="mb-6 rounded-2xl overflow-hidden border border-gray-200">
+                      <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                    <span>Size: {(fileObject!.size / (1024 * 1024)).toFixed(2)} MB</span>
+                    <span>Format: {fileObject!.type.split('/')[1] || 'unknown'}</span>
+                  </div>
                 </div>
-                <button 
-                  onClick={handlePublish}
-                  className="w-full bg-gray-900 text-white py-6 rounded-2xl font-black text-xl hover:bg-yeonji transition-all shadow-xl"
-                >
-                  영구 보관소에 게시하기
-                </button>
+
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => { setFileObject(null); setPreview(null); }}
+                    className="flex-1 bg-gray-100 text-gray-500 py-5 rounded-2xl font-black text-sm hover:bg-gray-200 transition-all"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    onClick={handlePublish}
+                    className="flex-[2] bg-gray-900 text-white py-5 rounded-2xl font-black text-sm md:text-xl hover:bg-yeonji transition-all shadow-xl transform active:scale-95"
+                  >
+                    영구 보관소 게시
+                  </button>
+                </div>
               </div>
             )}
           </div>
