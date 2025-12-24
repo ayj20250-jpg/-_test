@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { generateBrandStory } from '../services/geminiService';
-import { GalleryItem } from '../types';
+import { generateBrandStory } from '../services/geminiService.ts';
+import { GalleryItem } from '../types.ts';
 
 interface Props {
   isOpen: boolean;
@@ -68,7 +68,6 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, onClose, onUploadSucces
 
     onUploadSuccess(newItem);
     onClose();
-    // 초기화
     setTitle('');
     setFile(null);
     setDescription('');
